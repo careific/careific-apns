@@ -1,30 +1,67 @@
-var deviceToken = '740552dc73b346a8174911da41ac02779d2160472b36a08390911f84f945b5ee';
-var apn = require('apn');
+// import * as fs from "fs";
 
-var options = {
-    token: {
-        key: "AuthKey_GGCVCFW5H9.p8",
-        keyId: "GGCVCFW5H9",
-        teamId: "594Q84397D"
-    },
-    production: false
-};
+var deviceToken = 'c8fafad6c7c1ffe89e32742ef157c8afc7e2e06cd5ae16e3de0d7eba1daad334';
+// var apn = require('apn');
+//
+// var options = {
+//     token: {
+//         key: "AuthKey_GGCVCFW5H9.p8",
+//         keyId: "GGCVCFW5H9",
+//         teamId: "594Q84397D"
+//     },
+//     production: false
+// };
+//
+// var apnProvider = new apn.Provider(options);
+//
+// let notification = new apn.Notification();
+// notification.topic = "com.YTeam.LifeWatch.voip-ptt";
+// notification.pushType = "pushtotalk";
+// notification.priority = 10;
+// notification.expiry = 0;
+// notification.payload = {
+//     "activeSpeaker":"The name of the active speaker"
+// }
+//
+// apnProvider.send(notification, [deviceToken]).then( (response) => {
+//     // response.sent: Array of device tokens to which the notification was sent succesfully
+//     // response.failed: Array of objects containing the device token (`device`) and either an `error`, or a `status` and `response` from the API
+//     console.log("successfull device tokens: " + JSON.stringify(response.sent));
+//     console.log("failed device tokens: " + JSON.stringify(response.failed));
+//     process.exit();
+// });
 
-var apnProvider = new apn.Provider(options);
+const ApnsClient = require('apns2').ApnsClient;
+const Notification = require('apns2').Notification;
+const PushType = require('apns2').PushType;
+const fs = require("fs");
 
-let notification = new apn.Notification();
-notification.topic = "com.YTeam.LifeWatch.voip-ptt";
-notification.pushType = "pushtotalk";
-notification.priority = 10;
-notification.expiry = 0;
-notification.payload = {
-    "activeSpeaker":"The name of the active speaker"
+async function start() {
+    const client = new ApnsClient({
+        host: 'api.sandbox.push.apple.com',
+        team: `594Q84397D`,
+        keyId: `GGCVCFW5H9`,
+        signingKey: fs.readFileSync(`${__dirname}/AuthKey_GGCVCFW5H9.p8`),
+        defaultTopic: `com.YTeam.LifeWatch`,
+        requestTimeout: 0, // optional, Default: 0 (without timeout)
+        pingInterval: 5000, // optional, Default: 5000
+    })
+
+    const bn = new Notification(deviceToken, {
+        data: {
+            activeSpeaker: "The name of the active speaker"
+        },
+        topic: 'com.YTeam.LifeWatch.voip-ptt',
+        type: PushType.pushtotalk
+    })
+
+    try {
+        await client.send(bn)
+    } catch (err) {
+        console.error(err)
+    }
 }
 
-apnProvider.send(notification, [deviceToken]).then( (response) => {
-    // response.sent: Array of device tokens to which the notification was sent succesfully
-    // response.failed: Array of objects containing the device token (`device`) and either an `error`, or a `status` and `response` from the API
-    console.log("successfull device tokens: " + JSON.stringify(response.sent));
-    console.log("failed device tokens: " + JSON.stringify(response.failed));
-    process.exit();
-});
+start().then(r => {
+    process.exit()
+})

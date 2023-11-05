@@ -11,7 +11,7 @@ const client = new ApnsClient({
     team: `594Q84397D`,
     keyId: `GGCVCFW5H9`,
     signingKey: fs.readFileSync(`${__dirname}/AuthKey_GGCVCFW5H9.p8`),
-    defaultTopic: `com.YTeam.LifeWatch`,
+    defaultTopic: `com.YTeam.Careific`,
     requestTimeout: 0, // optional, Default: 0 (without timeout)
     pingInterval: 5000, // optional, Default: 5000
 })
@@ -67,7 +67,7 @@ const observer1 = admin.firestore().collection('ptt').onSnapshot(querySnapshot  
                                                             data: {
                                                                 activeSpeaker: speakerId
                                                             },
-                                                            topic: 'com.YTeam.LifeWatch.voip-ptt',
+                                                            topic: 'com.YTeam.Careific.voip-ptt',
                                                             type: PushType.pushtotalk
                                                         })
 

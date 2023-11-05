@@ -1,6 +1,6 @@
 // import * as fs from "fs";
 
-var deviceToken = 'c8fafad6c7c1ffe89e32742ef157c8afc7e2e06cd5ae16e3de0d7eba1daad334';
+var deviceToken = '00bc24aba2473fde5b79f66c6fd3e4fbddb228a509b3426d5fcdbadf206c31e5';
 // var apn = require('apn');
 //
 // var options = {
@@ -42,7 +42,7 @@ async function start() {
         team: `594Q84397D`,
         keyId: `GGCVCFW5H9`,
         signingKey: fs.readFileSync(`${__dirname}/AuthKey_GGCVCFW5H9.p8`),
-        defaultTopic: `com.YTeam.LifeWatch`,
+        defaultTopic: `com.YTeam.Careific`,
         requestTimeout: 0, // optional, Default: 0 (without timeout)
         pingInterval: 5000, // optional, Default: 5000
     })
@@ -51,7 +51,7 @@ async function start() {
         data: {
             activeSpeaker: "The name of the active speaker"
         },
-        topic: 'com.YTeam.LifeWatch.voip-ptt',
+        topic: 'com.YTeam.Careific.voip-ptt',
         type: PushType.pushtotalk
     })
 

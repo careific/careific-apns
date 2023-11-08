@@ -69,9 +69,9 @@ admin.firestore().collection('ptt').onSnapshot(querySnapshot  => {
                                             .get()
                                             .then(async (doc) => {
                                                 if (doc.exists) {// @ts-ignore
+                                                    console.log("Document data:", doc.data());
+                                                    // @ts-ignore
                                                     if (doc.data().pttToken != null) {
-                                                        console.log("Document data:", doc.data());
-                                                        // @ts-ignore
                                                         const token = String(doc.data().pttToken);
                                                         const notification = new Notification(token, {
                                                             data: {
@@ -82,17 +82,18 @@ admin.firestore().collection('ptt').onSnapshot(querySnapshot  => {
                                                         })
 
                                                         notifications.push(notification)
-
-                                                        if (index == snapshot.size - 1) {
-                                                            try {
-                                                                await client.sendMany(notifications)
-                                                            } catch (err) {
-                                                                console.error(err)
-                                                            }
-                                                        }
-
-                                                        index += 1
                                                     }
+
+                                                    if (index == snapshot.size - 1) {
+                                                        try {
+                                                            console.log('notif:', notifications)
+                                                            await client.sendMany(notifications)
+                                                        } catch (err) {
+                                                            console.error(err)
+                                                        }
+                                                    }
+
+                                                    index += 1
                                                 } else {
                                                     // doc.data() will be undefined in this case
                                                     console.log("No such document!");

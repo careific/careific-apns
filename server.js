@@ -68,14 +68,15 @@ admin.firestore().collection('ptt').onSnapshot(querySnapshot  => {
                                             .doc(invite.caregiverId == speakerId ? invite.seniorId : invite.caregiverId)
                                             .get()
                                             .then(async (doc) => {
-                                                if (doc.exists) {// @ts-ignore
-                                                    console.log("Document data:", doc.data());
-                                                    // @ts-ignore
+                                                if (doc.exists) {
+                                                    console.log("Speaker data:", doc.data());
+                                                    const name = String(doc.data().name);
+                                                    
                                                     if (doc.data().pttToken != null) {
                                                         const token = String(doc.data().pttToken);
                                                         const notification = new Notification(token, {
                                                             data: {
-                                                                activeSpeaker: speakerId
+                                                                activeSpeaker: `${name} is talking`
                                                             },
                                                             topic: 'com.YTeam.Careific.voip-ptt',
                                                             type: PushType.pushtotalk
@@ -158,10 +159,10 @@ admin.firestore().collection('sos').onSnapshot(querySnapshot  => {
                                                         .doc(invite.caregiverId)
                                                         .get()
                                                         .then((doc) => {
-                                                            if (doc.exists) {// @ts-ignore
+                                                            if (doc.exists) {
                                                                 if (doc.data().fcmToken != null) {
                                                                     console.log("Document data:", doc.data());
-                                                                    // @ts-ignore
+                                                                    
                                                                     const token = String(doc.data().fcmToken);
                                                                     const message = {
                                                                         notification: {
@@ -268,10 +269,10 @@ admin.firestore().collection('idles').onSnapshot(querySnapshot  => {
                                                         .doc(invite.caregiverId)
                                                         .get()
                                                         .then((doc) => {
-                                                            if (doc.exists) {// @ts-ignore
+                                                            if (doc.exists) {
                                                                 if (doc.data().fcmToken != null) {
                                                                     console.log("Document data:", doc.data());
-                                                                    // @ts-ignore
+                                                                    
                                                                     const token = String(doc.data().fcmToken);
                                                                     const message = {
                                                                         notification: {
@@ -368,10 +369,10 @@ admin.firestore().collection('charges').onSnapshot(querySnapshot  => {
                                                         .doc(invite.caregiverId)
                                                         .get()
                                                         .then((doc) => {
-                                                            if (doc.exists) {// @ts-ignore
+                                                            if (doc.exists) {
                                                                 if (doc.data().fcmToken != null) {
                                                                     console.log("Document data:", doc.data());
-                                                                    // @ts-ignore
+                                                                    
                                                                     const token = String(doc.data().fcmToken);
                                                                     const message = {
                                                                         notification: {
@@ -469,10 +470,10 @@ admin.firestore().collection('falls').onSnapshot(querySnapshot  => {
                                                         .get()
                                                         .then((doc) => {
                                                             if (doc.exists) {
-                                                                // @ts-ignore
+                                                                
                                                                 if (doc.data().fcmToken != null) {
                                                                     console.log("Document data:", doc.data());
-                                                                    // @ts-ignore
+                                                                    
                                                                     const token = String(doc.data().fcmToken);
                                                                     const message = {
                                                                         notification: {
@@ -571,7 +572,7 @@ admin.firestore().collection('invites').onSnapshot(querySnapshot  => {
                                     .get()
                                     .then((doc) => {
                                         if (doc.exists) {
-                                            // @ts-ignore
+                                            
                                             if (doc.data().fcmToken != null) {
                                                 console.log("Recipient data:", doc.data());
                                                 const token = String(doc.data().fcmToken);

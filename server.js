@@ -389,85 +389,102 @@ admin.firestore().collection('falls').onSnapshot(querySnapshot  => {
 
                     let messages = []
 
-                    return admin
+                    admin
                         .firestore()
-                        .collection('invites')
-                        .where('seniorId', '==', seniorId)
+                        .collection('users')
+                        .doc(seniorId)
                         .get()
-                        .then((snapshot) => {
-                            if (!snapshot.empty) {
-                                let index = 0
-                                snapshot.forEach(doc => {
-                                    const invite = doc.data()
+                        .then((doc) => {
+                            if (doc.exists) {
+                                console.log("Senior data:", doc.data());
+                                const name = String(doc.data().name);
 
-                                    if (invite.accepted) {
-                                        admin
-                                            .firestore()
-                                            .collection('users')
-                                            .doc(invite.caregiverId)
-                                            .get()
-                                            .then((doc) => {
-                                                if (doc.exists) {
-                                                    // @ts-ignore
-                                                    if (doc.data().fcmToken != null) {
-                                                        console.log("Document data:", doc.data());
-                                                        // @ts-ignore
-                                                        const token = String(doc.data().fcmToken);
-                                                        const message = {
-                                                            notification: {
-                                                                title: 'Fall detection triggered!',
-                                                                body: 'Please contact or find help for your senior immediately!',
-                                                            },
-                                                            token: token,
-                                                            apns: {
-                                                                headers: {
-                                                                    "apns-priority": "10"
-                                                                },
-                                                                payload: {
-                                                                    "aps" : {
-                                                                        "alert" : {
-                                                                            "title" : "Fall detection triggered!",
-                                                                            "body" : "Please contact or find help for your senior immediately!"
+                                admin
+                                    .firestore()
+                                    .collection('invites')
+                                    .where('seniorId', '==', seniorId)
+                                    .get()
+                                    .then((snapshot) => {
+                                        if (!snapshot.empty) {
+                                            let index = 0
+                                            snapshot.forEach(doc => {
+                                                const invite = doc.data()
+
+                                                if (invite.accepted) {
+                                                    admin
+                                                        .firestore()
+                                                        .collection('users')
+                                                        .doc(invite.caregiverId)
+                                                        .get()
+                                                        .then((doc) => {
+                                                            if (doc.exists) {
+                                                                // @ts-ignore
+                                                                if (doc.data().fcmToken != null) {
+                                                                    console.log("Document data:", doc.data());
+                                                                    // @ts-ignore
+                                                                    const token = String(doc.data().fcmToken);
+                                                                    const message = {
+                                                                        notification: {
+                                                                            title: `${name}'s fall was detection triggered!`,
+                                                                            body: `Please contact ${name} or find help immediately!`,
                                                                         },
-                                                                        "interruption-level": "critical",
-                                                                    },
-                                                                },
+                                                                        token: token,
+                                                                        apns: {
+                                                                            headers: {
+                                                                                "apns-priority": "10"
+                                                                            },
+                                                                            payload: {
+                                                                                "aps" : {
+                                                                                    "alert" : {
+                                                                                        "title": `${name}'s fall was detection triggered!`,
+                                                                                        "body": `Please contact ${name} or find help immediately!`,
+                                                                                    },
+                                                                                    "interruption-level": "critical",
+                                                                                },
+                                                                            },
+                                                                        }
+                                                                    };
+
+                                                                    messages.push(message)
+
+                                                                    if (index == snapshot.size - 1) {
+                                                                        admin.messaging().sendEach(messages)
+                                                                            .then((response) => {
+                                                                                // Response is a message ID string.
+                                                                                console.log('Successfully sent message:', response.responses);
+                                                                                console.log('Sent to: ', messages.length, ' devices');
+                                                                            })
+                                                                            .catch((error) => {
+                                                                                console.log('Error sending message:', error);
+                                                                            });
+                                                                    }
+
+                                                                    index += 1
+                                                                }
+                                                            } else {
+                                                                // doc.data() will be undefined in this case
+                                                                console.log("No such document!");
                                                             }
-                                                        };
-
-                                                        messages.push(message)
-
-                                                        if (index == snapshot.size - 1) {
-                                                            admin.messaging().sendEach(messages)
-                                                                .then((response) => {
-                                                                    // Response is a message ID string.
-                                                                    console.log('Successfully sent message:', response.responses);
-                                                                    console.log('Sent to: ', messages.length, ' devices');
-                                                                })
-                                                                .catch((error) => {
-                                                                    console.log('Error sending message:', error);
-                                                                });
-                                                        }
-
-                                                        index += 1
-                                                    }
-                                                } else {
-                                                    // doc.data() will be undefined in this case
-                                                    console.log("No such document!");
+                                                        }).catch((error) => {
+                                                        console.log("Error getting document:", error);
+                                                    });
                                                 }
-                                            }).catch((error) => {
-                                            console.log("Error getting document:", error);
-                                        });
-                                    }
 
-                                    console.log(doc.id, '=>', doc.data());
+                                                console.log(doc.id, '=>', doc.data());
+                                            });
+                                        } else {
+                                            console.log("No such document!");
+                                        }
+                                    }).catch((error) => {
+                                    console.log("Error getting document:", error);
                                 });
                             } else {
+                                // doc.data() will be undefined in this case
                                 console.log("No such document!");
                             }
                         }).catch((error) => {
-                            console.log("Error getting document:", error);
-                        });
+                        console.log("Error getting document:", error);
+                    });
                 }
             });
         }

@@ -55,56 +55,76 @@ admin.firestore().collection('ptt').onSnapshot(querySnapshot  => {
                         .get()
                         .then((snapshot) => {
                             if (!snapshot.empty) {
-                                let notifications = []
-                                let index = 0
+                                admin
+                                    .firestore()
+                                    .collection('users')
+                                    .doc(speakerId)
+                                    .get()
+                                    .then((doc) => {
+                                        if (doc.exists) {
+                                            console.log("speaker data:", doc.data());
+                                            const name = String(doc.data().name);
 
-                                snapshot.forEach(doc => {
-                                    const invite = doc.data()
+                                            let notifications = []
+                                            let index = 0
 
-                                    if (invite.accepted) {
-                                        admin
-                                            .firestore()
-                                            .collection('users')
-                                            .doc(invite.caregiverId == speakerId ? invite.seniorId : invite.caregiverId)
-                                            .get()
-                                            .then(async (doc) => {
-                                                if (doc.exists) {
-                                                    console.log("Speaker data:", doc.data());
-                                                    const name = String(doc.data().name);
-                                                    
-                                                    if (doc.data().pttToken != null) {
-                                                        const token = String(doc.data().pttToken);
-                                                        const notification = new Notification(token, {
-                                                            data: {
-                                                                activeSpeaker: `${name} is talking`
-                                                            },
-                                                            topic: 'com.YTeam.Careific.voip-ptt',
-                                                            type: PushType.pushtotalk
-                                                        })
+                                            if (!snapshot.empty) {
+                                                snapshot.forEach(doc => {
+                                                    const invite = doc.data()
 
-                                                        notifications.push(notification)
+                                                    if (invite.accepted) {
+                                                        admin
+                                                            .firestore()
+                                                            .collection('users')
+                                                            .doc(invite.caregiverId == speakerId ? invite.seniorId : invite.caregiverId)
+                                                            .get()
+                                                            .then(async (doc) => {
+                                                                if (doc.exists) {
+                                                                    console.log("receiver data:", doc.data());
+
+                                                                    if (doc.data().pttToken != null) {
+                                                                        const token = String(doc.data().pttToken);
+                                                                        const notification = new Notification(token, {
+                                                                            data: {
+                                                                                activeSpeaker: `${name} is talking`
+                                                                            },
+                                                                            topic: 'com.YTeam.Careific.voip-ptt',
+                                                                            type: PushType.pushtotalk
+                                                                        })
+
+                                                                        notifications.push(notification)
+                                                                    }
+
+                                                                    if (index == snapshot.size - 1) {
+                                                                        try {
+                                                                            console.log('notif:', notifications)
+                                                                            await client.sendMany(notifications)
+                                                                        } catch (err) {
+                                                                            console.error(err)
+                                                                        }
+                                                                    }
+
+                                                                    index += 1
+                                                                } else {
+                                                                    // doc.data() will be undefined in this case
+                                                                    console.log("No such document!");
+                                                                }
+                                                            }).catch((error) => {
+                                                            console.log("Error getting document:", error);
+                                                        });
                                                     }
 
-                                                    if (index == snapshot.size - 1) {
-                                                        try {
-                                                            console.log('notif:', notifications)
-                                                            await client.sendMany(notifications)
-                                                        } catch (err) {
-                                                            console.error(err)
-                                                        }
-                                                    }
-
-                                                    index += 1
-                                                } else {
-                                                    // doc.data() will be undefined in this case
-                                                    console.log("No such document!");
-                                                }
-                                            }).catch((error) => {
-                                            console.log("Error getting document:", error);
-                                        });
-                                    }
-
-                                    console.log(doc.id, '=>', doc.data());
+                                                    console.log(doc.id, '=>', doc.data());
+                                                });
+                                            } else {
+                                                console.log("No such document!");
+                                            }
+                                        } else {
+                                            // doc.data() will be undefined in this case
+                                            console.log("No such document!");
+                                        }
+                                    }).catch((error) => {
+                                    console.log("Error getting document:", error);
                                 });
                             } else {
                                 console.log("No such document!");

@@ -482,48 +482,65 @@ admin.firestore().collection('invites').onSnapshot(querySnapshot  => {
             querySnapshot.docChanges().forEach(change => {
                 if (change.type === 'added') {
                     const invite = change.doc.data();
+                    const senderId = invite.caregiverId;
                     const recipientId = invite.seniorId;
                     console.log("RECIPIENT ID: " + recipientId);
 
-                    return admin
+                    admin
                         .firestore()
                         .collection('users')
-                        .doc(recipientId)
+                        .doc(senderId)
                         .get()
                         .then((doc) => {
                             if (doc.exists) {
-                                // @ts-ignore
-                                if (doc.data().fcmToken != null) {
-                                    console.log("Document data:", doc.data());
-                                    // @ts-ignore
-                                    const token = String(doc.data().fcmToken);
-                                    const message = {
-                                        notification: {
-                                            title: 'New request received from ...',
-                                            body: '... has requested to become your caregiver',
-                                        },
-                                        token: token
-                                    };
+                                console.log("Sender data:", doc.data());
+                                const name = String(doc.data().name);
 
-                                    // Send a message to the device corresponding to the provided
-                                    // registration token.
-                                    admin.messaging().send(message)
-                                        .then((response) => {
-                                            // Response is a message ID string.
-                                            console.log('Successfully sent message:', response);
-                                            console.log('Sent to: ', token);
-                                        })
-                                        .catch((error) => {
-                                            console.log('Error sending message:', error);
-                                        });
-                                }
+                                admin
+                                    .firestore()
+                                    .collection('users')
+                                    .doc(recipientId)
+                                    .get()
+                                    .then((doc) => {
+                                        if (doc.exists) {
+                                            // @ts-ignore
+                                            if (doc.data().fcmToken != null) {
+                                                console.log("Recipient data:", doc.data());
+                                                const token = String(doc.data().fcmToken);
+                                                const message = {
+                                                    notification: {
+                                                        title: `New request received from ${name}`,
+                                                        body: `${name} has requested to become your caregiver.`,
+                                                    },
+                                                    token: token
+                                                };
+
+                                                // Send a message to the device corresponding to the provided
+                                                // registration token.
+                                                admin.messaging().send(message)
+                                                    .then((response) => {
+                                                        // Response is a message ID string.
+                                                        console.log('Successfully sent message:', response);
+                                                        console.log('Sent to: ', token);
+                                                    })
+                                                    .catch((error) => {
+                                                        console.log('Error sending message:', error);
+                                                    });
+                                            }
+                                        } else {
+                                            // doc.data() will be undefined in this case
+                                            console.log("No such document!");
+                                        }
+                                    }).catch((error) => {
+                                    console.log("Error getting document:", error);
+                                });
                             } else {
                                 // doc.data() will be undefined in this case
                                 console.log("No such document!");
                             }
                         }).catch((error) => {
-                            console.log("Error getting document:", error);
-                        });
+                        console.log("Error getting document:", error);
+                    });
                 }
             });
         }

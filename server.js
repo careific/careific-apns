@@ -130,80 +130,97 @@ admin.firestore().collection('sos').onSnapshot(querySnapshot  => {
 
                     let messages = []
 
-                    return admin
+                    admin
                         .firestore()
-                        .collection('invites')
-                        .where('seniorId', '==', seniorId)
+                        .collection('users')
+                        .doc(seniorId)
                         .get()
-                        .then((snapshot) => {
-                            if (!snapshot.empty) {
-                                let index = 0
-                                snapshot.forEach(doc => {
-                                    const invite = doc.data()
+                        .then((doc) => {
+                            if (doc.exists) {
+                                console.log("Senior data:", doc.data());
+                                const name = String(doc.data().name);
 
-                                    if (invite.accepted) {
-                                        admin
-                                            .firestore()
-                                            .collection('users')
-                                            .doc(invite.caregiverId)
-                                            .get()
-                                            .then((doc) => {
-                                                if (doc.exists) {// @ts-ignore
-                                                    if (doc.data().fcmToken != null) {
-                                                        console.log("Document data:", doc.data());
-                                                        // @ts-ignore
-                                                        const token = String(doc.data().fcmToken);
-                                                        const message = {
-                                                            notification: {
-                                                                title: 'SOS!!!',
-                                                                body: 'Your senior pressed the SOS button!',
-                                                            },
-                                                            token: token,
-                                                            apns: {
-                                                                headers: {
-                                                                    "apns-priority": "10"
-                                                                },
-                                                                payload: {
-                                                                    "aps" : {
-                                                                        "interruption-level": "critical",
-                                                                    },
-                                                                },
+                                admin
+                                    .firestore()
+                                    .collection('invites')
+                                    .where('seniorId', '==', seniorId)
+                                    .get()
+                                    .then((snapshot) => {
+                                        if (!snapshot.empty) {
+                                            let index = 0
+                                            snapshot.forEach(doc => {
+                                                const invite = doc.data()
+
+                                                if (invite.accepted) {
+                                                    admin
+                                                        .firestore()
+                                                        .collection('users')
+                                                        .doc(invite.caregiverId)
+                                                        .get()
+                                                        .then((doc) => {
+                                                            if (doc.exists) {// @ts-ignore
+                                                                if (doc.data().fcmToken != null) {
+                                                                    console.log("Document data:", doc.data());
+                                                                    // @ts-ignore
+                                                                    const token = String(doc.data().fcmToken);
+                                                                    const message = {
+                                                                        notification: {
+                                                                            title: `SOS! ${name} pressed the SOS button!`,
+                                                                            body: `Please contact ${name} or find help immediately!`,
+                                                                        },
+                                                                        token: token,
+                                                                        apns: {
+                                                                            headers: {
+                                                                                "apns-priority": "10"
+                                                                            },
+                                                                            payload: {
+                                                                                "aps" : {
+                                                                                    "interruption-level": "critical",
+                                                                                },
+                                                                            },
+                                                                        }
+                                                                    };
+
+                                                                    messages.push(message)
+
+                                                                    if (index == snapshot.size - 1) {
+                                                                        admin.messaging().sendEach(messages)
+                                                                            .then((response) => {
+                                                                                // Response is a message ID string.
+                                                                                console.log('Successfully sent message:', response.responses);
+                                                                                console.log('Sent to: ', messages.length, ' devices');
+                                                                            })
+                                                                            .catch((error) => {
+                                                                                console.log('Error sending message:', error);
+                                                                            });
+                                                                    }
+
+                                                                    index += 1
+                                                                }
+                                                            } else {
+                                                                // doc.data() will be undefined in this case
+                                                                console.log("No such document!");
                                                             }
-                                                        };
-
-                                                        messages.push(message)
-
-                                                        if (index == snapshot.size - 1) {
-                                                            admin.messaging().sendEach(messages)
-                                                                .then((response) => {
-                                                                    // Response is a message ID string.
-                                                                    console.log('Successfully sent message:', response.responses);
-                                                                    console.log('Sent to: ', messages.length, ' devices');
-                                                                })
-                                                                .catch((error) => {
-                                                                    console.log('Error sending message:', error);
-                                                                });
-                                                        }
-
-                                                        index += 1
-                                                    }
-                                                } else {
-                                                    // doc.data() will be undefined in this case
-                                                    console.log("No such document!");
+                                                        }).catch((error) => {
+                                                        console.log("Error getting document:", error);
+                                                    });
                                                 }
-                                            }).catch((error) => {
-                                            console.log("Error getting document:", error);
-                                        });
-                                    }
 
-                                    console.log(doc.id, '=>', doc.data());
+                                                console.log(doc.id, '=>', doc.data());
+                                            });
+                                        } else {
+                                            console.log("No such document!");
+                                        }
+                                    }).catch((error) => {
+                                    console.log("Error getting document:", error);
                                 });
                             } else {
+                                // doc.data() will be undefined in this case
                                 console.log("No such document!");
                             }
                         }).catch((error) => {
-                            console.log("Error getting document:", error);
-                        });
+                        console.log("Error getting document:", error);
+                    });
                 }
             });
         }
@@ -223,70 +240,87 @@ admin.firestore().collection('idles').onSnapshot(querySnapshot  => {
 
                     let messages = []
 
-                    return admin
+                    admin
                         .firestore()
-                        .collection('invites')
-                        .where('seniorId', '==', seniorId)
+                        .collection('users')
+                        .doc(seniorId)
                         .get()
-                        .then((snapshot) => {
-                            if (!snapshot.empty) {
-                                let index = 0
-                                snapshot.forEach(doc => {
-                                    const invite = doc.data()
+                        .then((doc) => {
+                            if (doc.exists) {
+                                console.log("Senior data:", doc.data());
+                                const name = String(doc.data().name);
 
-                                    if (invite.accepted) {
-                                        admin
-                                            .firestore()
-                                            .collection('users')
-                                            .doc(invite.caregiverId)
-                                            .get()
-                                            .then((doc) => {
-                                                if (doc.exists) {// @ts-ignore
-                                                    if (doc.data().fcmToken != null) {
-                                                        console.log("Document data:", doc.data());
-                                                        // @ts-ignore
-                                                        const token = String(doc.data().fcmToken);
-                                                        const message = {
-                                                            notification: {
-                                                                title: "No activity detected for 30 minutes!",
-                                                                body: '... Apple Watch has not been moving for 30 minutes',
-                                                            },
-                                                            token: token,
-                                                        };
+                                admin
+                                    .firestore()
+                                    .collection('invites')
+                                    .where('seniorId', '==', seniorId)
+                                    .get()
+                                    .then((snapshot) => {
+                                        if (!snapshot.empty) {
+                                            let index = 0
+                                            snapshot.forEach(doc => {
+                                                const invite = doc.data()
 
-                                                        messages.push(message)
+                                                if (invite.accepted) {
+                                                    admin
+                                                        .firestore()
+                                                        .collection('users')
+                                                        .doc(invite.caregiverId)
+                                                        .get()
+                                                        .then((doc) => {
+                                                            if (doc.exists) {// @ts-ignore
+                                                                if (doc.data().fcmToken != null) {
+                                                                    console.log("Document data:", doc.data());
+                                                                    // @ts-ignore
+                                                                    const token = String(doc.data().fcmToken);
+                                                                    const message = {
+                                                                        notification: {
+                                                                            title: `${name} has been inactive for 6 hours`,
+                                                                            body: `${name}'s Apple Watch has not detected any motion for 6 hours.`,
+                                                                        },
+                                                                        token: token,
+                                                                    };
 
-                                                        if (index == snapshot.size - 1) {
-                                                            admin.messaging().sendEach(messages)
-                                                                .then((response) => {
-                                                                    // Response is a message ID string.
-                                                                    console.log('Successfully sent message:', response.responses);
-                                                                    console.log('Sent to: ', messages.length, ' devices');
-                                                                })
-                                                                .catch((error) => {
-                                                                    console.log('Error sending message:', error);
-                                                                });
-                                                        }
+                                                                    messages.push(message)
 
-                                                        index += 1
-                                                    }
-                                                } else {
-                                                    // doc.data() will be undefined in this case
-                                                    console.log("No such document!");
+                                                                    if (index == snapshot.size - 1) {
+                                                                        admin.messaging().sendEach(messages)
+                                                                            .then((response) => {
+                                                                                // Response is a message ID string.
+                                                                                console.log('Successfully sent message:', response.responses);
+                                                                                console.log('Sent to: ', messages.length, ' devices');
+                                                                            })
+                                                                            .catch((error) => {
+                                                                                console.log('Error sending message:', error);
+                                                                            });
+                                                                    }
+
+                                                                    index += 1
+                                                                }
+                                                            } else {
+                                                                // doc.data() will be undefined in this case
+                                                                console.log("No such document!");
+                                                            }
+                                                        }).catch((error) => {
+                                                        console.log("Error getting document:", error);
+                                                    });
                                                 }
-                                            }).catch((error) => {
-                                            console.log("Error getting document:", error);
-                                        });
-                                    }
 
-                                    console.log(doc.id, '=>', doc.data());
+                                                console.log(doc.id, '=>', doc.data());
+                                            });
+                                        } else {
+                                            console.log("No such document!");
+                                        }
+                                    }).catch((error) => {
+                                    console.log("Error getting document:", error);
                                 });
                             } else {
+                                // doc.data() will be undefined in this case
                                 console.log("No such document!");
                             }
                         }).catch((error) => {
-                            console.log("Error getting document:", error);
-                        });
+                        console.log("Error getting document:", error);
+                    });
                 }
             });
         }
@@ -306,70 +340,87 @@ admin.firestore().collection('charges').onSnapshot(querySnapshot  => {
 
                     let messages = []
 
-                    return admin
+                    admin
                         .firestore()
-                        .collection('invites')
-                        .where('seniorId', '==', seniorId)
+                        .collection('users')
+                        .doc(seniorId)
                         .get()
-                        .then((snapshot) => {
-                            if (!snapshot.empty) {
-                                let index = 0
-                                snapshot.forEach(doc => {
-                                    const invite = doc.data()
+                        .then((doc) => {
+                            if (doc.exists) {
+                                console.log("Senior data:", doc.data());
+                                const name = String(doc.data().name);
 
-                                    if (invite.accepted) {
-                                        admin
-                                            .firestore()
-                                            .collection('users')
-                                            .doc(invite.caregiverId)
-                                            .get()
-                                            .then((doc) => {
-                                                if (doc.exists) {// @ts-ignore
-                                                    if (doc.data().fcmToken != null) {
-                                                        console.log("Document data:", doc.data());
-                                                        // @ts-ignore
-                                                        const token = String(doc.data().fcmToken);
-                                                        const message = {
-                                                            notification: {
-                                                                title: "Your senior's watch is charging!",
-                                                                body: 'Safety detection features are not available during charging',
-                                                            },
-                                                            token: token,
-                                                        };
+                                admin
+                                    .firestore()
+                                    .collection('invites')
+                                    .where('seniorId', '==', seniorId)
+                                    .get()
+                                    .then((snapshot) => {
+                                        if (!snapshot.empty) {
+                                            let index = 0
+                                            snapshot.forEach(doc => {
+                                                const invite = doc.data()
 
-                                                        messages.push(message)
+                                                if (invite.accepted) {
+                                                    admin
+                                                        .firestore()
+                                                        .collection('users')
+                                                        .doc(invite.caregiverId)
+                                                        .get()
+                                                        .then((doc) => {
+                                                            if (doc.exists) {// @ts-ignore
+                                                                if (doc.data().fcmToken != null) {
+                                                                    console.log("Document data:", doc.data());
+                                                                    // @ts-ignore
+                                                                    const token = String(doc.data().fcmToken);
+                                                                    const message = {
+                                                                        notification: {
+                                                                            title: `${name}'s watch is charging`,
+                                                                            body: 'Safety detection features are not available during charging.',
+                                                                        },
+                                                                        token: token,
+                                                                    };
 
-                                                        if (index == snapshot.size - 1) {
-                                                            admin.messaging().sendEach(messages)
-                                                                .then((response) => {
-                                                                    // Response is a message ID string.
-                                                                    console.log('Successfully sent message:', response.responses);
-                                                                    console.log('Sent to: ', messages.length, ' devices');
-                                                                })
-                                                                .catch((error) => {
-                                                                    console.log('Error sending message:', error);
-                                                                });
-                                                        }
+                                                                    messages.push(message)
 
-                                                        index += 1
-                                                    }
-                                                } else {
-                                                    // doc.data() will be undefined in this case
-                                                    console.log("No such document!");
+                                                                    if (index == snapshot.size - 1) {
+                                                                        admin.messaging().sendEach(messages)
+                                                                            .then((response) => {
+                                                                                // Response is a message ID string.
+                                                                                console.log('Successfully sent message:', response.responses);
+                                                                                console.log('Sent to: ', messages.length, ' devices');
+                                                                            })
+                                                                            .catch((error) => {
+                                                                                console.log('Error sending message:', error);
+                                                                            });
+                                                                    }
+
+                                                                    index += 1
+                                                                }
+                                                            } else {
+                                                                // doc.data() will be undefined in this case
+                                                                console.log("No such document!");
+                                                            }
+                                                        }).catch((error) => {
+                                                        console.log("Error getting document:", error);
+                                                    });
                                                 }
-                                            }).catch((error) => {
-                                            console.log("Error getting document:", error);
-                                        });
-                                    }
 
-                                    console.log(doc.id, '=>', doc.data());
+                                                console.log(doc.id, '=>', doc.data());
+                                            });
+                                        } else {
+                                            console.log("No such document!");
+                                        }
+                                    }).catch((error) => {
+                                    console.log("Error getting document:", error);
                                 });
                             } else {
+                                // doc.data() will be undefined in this case
                                 console.log("No such document!");
                             }
                         }).catch((error) => {
-                            console.log("Error getting document:", error);
-                        });
+                        console.log("Error getting document:", error);
+                    });
                 }
             });
         }

@@ -87,7 +87,8 @@ admin.firestore().collection('ptt').onSnapshot(querySnapshot  => {
                                                                         const token = String(doc.data().pttToken);
                                                                         const notification = new Notification(token, {
                                                                             data: {
-                                                                                activeSpeaker: `${name} is talking`
+                                                                                activeSpeaker: `${name} is talking`,
+                                                                                uid: speakerId
                                                                             },
                                                                             topic: 'com.YTeam.Careific.voip-ptt',
                                                                             type: PushType.pushtotalk

@@ -27,6 +27,7 @@ admin.initializeApp({
 });
 
 let initPtt = true;
+let initHeartAnomaly = true;
 let initSos = true;
 let initIdles = true;
 let initCharges = true;
@@ -132,6 +133,127 @@ admin.firestore().collection('ptt').onSnapshot(querySnapshot  => {
                         }).catch((error) => {
                             console.log("Error getting document:", error);
                         });
+                }
+            });
+        }
+    }
+});
+
+admin.firestore().collection('heartAnomaly').onSnapshot(querySnapshot  => {
+    if (initHeartAnomaly) {
+        initHeartAnomaly = false;
+    } else {
+        if (!querySnapshot.docChanges().empty) {
+            querySnapshot.docChanges().forEach(change => {
+                if (change.type === 'added') {
+                    const heartAnomaly = change.doc.data();
+                    const seniorId = heartAnomaly.seniorId;
+                    const anomaly = heartAnomaly.anomaly;
+                    console.log("SENIOR ID: " + seniorId);
+
+                    let messages = []
+
+                    admin
+                        .firestore()
+                        .collection('users')
+                        .doc(seniorId)
+                        .get()
+                        .then((doc) => {
+                            if (doc.exists) {
+                                console.log("Senior data:", doc.data());
+                                const name = String(doc.data().name);
+
+                                let title = "";
+                                let body = "";
+                                if (anomaly == "lowHeart") {
+                                    title = `Low heart rate detected for ${name}`
+                                } else if (anomaly == "highHeart") {
+                                    title = `High heart rate detected for ${name}`
+                                } else {
+                                    title = `Irregular heart rate detected for ${name}`
+                                }
+                                if (anomaly == "lowHeart") {
+                                    body = `Please check on ${name}, their heart rate was detected to be lower than usual.`
+                                } else if (anomaly == "highHeart") {
+                                    body = `Please check on ${name}, their heart rate was detected to be higher than usual.`
+                                } else {
+                                    body = `Please check on ${name}, their heart rate was detected to be beating irregularly.`
+                                }
+
+                                console.log(title)
+                                console.log(body)
+
+                                admin
+                                    .firestore()
+                                    .collection('invites')
+                                    .where('seniorId', '==', seniorId)
+                                    .get()
+                                    .then((snapshot) => {
+                                        if (!snapshot.empty) {
+                                            let index = 0
+                                            snapshot.forEach(doc => {
+                                                const invite = doc.data()
+
+                                                if (invite.accepted) {
+                                                    admin
+                                                        .firestore()
+                                                        .collection('users')
+                                                        .doc(invite.caregiverId)
+                                                        .get()
+                                                        .then((doc) => {
+                                                            if (doc.exists) {
+                                                                if (doc.data().fcmToken != null) {
+                                                                    console.log("Document data:", doc.data());
+
+                                                                    const token = String(doc.data().fcmToken);
+                                                                    const message = {
+                                                                        notification: {
+                                                                            title: title,
+                                                                            body: body,
+                                                                        },
+                                                                        token: token,
+                                                                    };
+
+                                                                    messages.push(message)
+
+                                                                    if (index == snapshot.size - 1) {
+                                                                        admin.messaging().sendEach(messages)
+                                                                            .then((response) => {
+                                                                                // Response is a message ID string.
+                                                                                console.log('Successfully sent message:', response.responses);
+                                                                                console.log('Sent to: ', messages.length, ' devices');
+                                                                            })
+                                                                            .catch((error) => {
+                                                                                console.log('Error sending message:', error);
+                                                                            });
+                                                                    }
+
+                                                                    index += 1
+                                                                }
+                                                            } else {
+                                                                // doc.data() will be undefined in this case
+                                                                console.log("No such document!");
+                                                            }
+                                                        }).catch((error) => {
+                                                        console.log("Error getting document:", error);
+                                                    });
+                                                }
+
+                                                console.log(doc.id, '=>', doc.data());
+                                            });
+                                        } else {
+                                            console.log("No such document!");
+                                        }
+                                    }).catch((error) => {
+                                    console.log("Error getting document:", error);
+                                });
+                            } else {
+                                // doc.data() will be undefined in this case
+                                console.log("No such document!");
+                            }
+                        }).catch((error) => {
+                        console.log("Error getting document:", error);
+                    });
                 }
             });
         }

@@ -620,7 +620,7 @@ admin.firestore().collection('falls').onSnapshot(querySnapshot  => {
                                                                     const token = String(doc.data().fcmToken);
                                                                     const message = {
                                                                         notification: {
-                                                                            title: `${name}'s fall was detection triggered!`,
+                                                                            title: `${name}'s fall detection was triggered!`,
                                                                             body: `Please contact ${name} or find help immediately!`,
                                                                         },
                                                                         token: token,
@@ -631,7 +631,7 @@ admin.firestore().collection('falls').onSnapshot(querySnapshot  => {
                                                                             payload: {
                                                                                 "aps" : {
                                                                                     "alert" : {
-                                                                                        "title": `${name}'s fall was detection triggered!`,
+                                                                                        "title": `${name}'s fall detection was triggered!`,
                                                                                         "body": `Please contact ${name} or find help immediately!`,
                                                                                     },
                                                                                     "interruption-level": "critical",

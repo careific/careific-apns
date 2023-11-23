@@ -27,6 +27,7 @@ admin.initializeApp({
 });
 
 let initPtt = true;
+let initRoutines = true;
 let initHeartAnomaly = true;
 let initSos = true;
 let initIdles = true;
@@ -134,6 +135,103 @@ admin.firestore().collection('ptt').onSnapshot(querySnapshot  => {
                         }).catch((error) => {
                             console.log("Error getting document:", error);
                         });
+                }
+            });
+        }
+    }
+});
+
+admin.firestore().collection('routines').onSnapshot(querySnapshot  => {
+    if (initRoutines) {
+        initRoutines = false;
+    } else {
+        if (!querySnapshot.docChanges().empty) {
+            querySnapshot.docChanges().forEach(change => {
+                console.log(change.type)
+                if (change.type == 'added' || change.type == 'modified') {
+                    const routine = change.doc.data();
+                    const seniorId = routine.seniorId;
+                    console.log("SENIOR ID: " + seniorId);
+
+                    admin
+                        .firestore()
+                        .collection('users')
+                        .doc(seniorId)
+                        .get()
+                        .then((doc) => {
+                            if (doc.exists) {
+                                console.log("Senior data:", doc.data());
+                                const token = String(doc.data().fcmToken);
+                                const message = {
+                                    token: token,
+                                    apns: {
+                                        payload: {
+                                            "aps" : {
+                                                "content-available" : 1
+                                            },
+                                            "routine": routine,
+                                            "isDelete": false
+                                        },
+                                    }
+                                };
+
+                                admin.messaging().send(message)
+                                    .then((response) => {
+                                        // Response is a message ID string.
+                                        console.log('Successfully sent message:', response);
+                                    })
+                                    .catch((error) => {
+                                        console.log('Error sending message:', error);
+                                    });
+                            } else {
+                                // doc.data() will be undefined in this case
+                                console.log("No such document!");
+                            }
+                        }).catch((error) => {
+                        console.log("Error getting document:", error);
+                    });
+                } else {
+                    const routine = change.doc.data();
+                    const seniorId = routine.seniorId;
+                    console.log("SENIOR ID: " + seniorId);
+
+                    admin
+                        .firestore()
+                        .collection('users')
+                        .doc(seniorId)
+                        .get()
+                        .then((doc) => {
+                            if (doc.exists) {
+                                console.log("Senior data:", doc.data());
+                                const token = String(doc.data().fcmToken);
+                                const message = {
+                                    token: token,
+                                    apns: {
+                                        payload: {
+                                            "aps" : {
+                                                "content-available" : 1
+                                            },
+                                            "routine": routine,
+                                            "isDelete": true
+                                        },
+                                    }
+                                };
+
+                                admin.messaging().send(message)
+                                    .then((response) => {
+                                        // Response is a message ID string.
+                                        console.log('Successfully sent delete routine:', response);
+                                    })
+                                    .catch((error) => {
+                                        console.log('Error sending message:', error);
+                                    });
+                            } else {
+                                // doc.data() will be undefined in this case
+                                console.log("No such document!");
+                            }
+                        }).catch((error) => {
+                        console.log("Error getting document:", error);
+                    });
                 }
             });
         }

@@ -8,7 +8,7 @@ const fs = require("fs");
 const serviceAccount = require('./yteam-2e5ed-firebase-adminsdk-h2d9j-90ad73c9af.json');
 
 const client = new ApnsClient({
-    host: 'api.sandbox.push.apple.com',
+    host: 'api.push.apple.com',
     team: `594Q84397D`,
     keyId: `GGCVCFW5H9`,
     signingKey: fs.readFileSync(`${__dirname}/AuthKey_GGCVCFW5H9.p8`),
